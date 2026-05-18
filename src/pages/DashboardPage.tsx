@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Power, Eye, Check, X, LogOut, Printer, RefreshCw, FileText, Copy, MapPin, Trash2, ShieldAlert } from 'lucide-react'
+import { Power, Eye, Check, X, LogOut, Printer, RefreshCw, FileText, Copy, MapPin, Trash2, ShieldAlert, Download } from 'lucide-react'
 
 function playNotificationSound() {
   try {
@@ -171,6 +171,28 @@ export function DashboardPage() {
 
     toast.success('Berhasil', { id: 'open-file' })
     newWindow.location.href = data.signedUrl
+  }
+
+  async function handleDownloadFile(job: PrintJob) {
+    toast.loading('Menyiapkan file...', { id: 'download-file' })
+
+    const { data, error } = await supabase.storage
+      .from('print-files')
+      .createSignedUrl(job.file_path, 60, { download: job.file_name })
+
+    if (error) {
+      toast.error(error.message, { id: 'download-file' })
+      return
+    }
+
+    toast.success('Mengunduh...', { id: 'download-file' })
+    
+    const a = document.createElement('a')
+    a.href = data.signedUrl
+    a.download = job.file_name
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
   async function updateJobStatus(jobId: string, status: string) {
@@ -507,6 +529,14 @@ export function DashboardPage() {
                               title="Buka File"
                             >
                               <Eye size={18} />
+                            </button>
+
+                            <button
+                              onClick={() => handleDownloadFile(job)}
+                              className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Download File"
+                            >
+                              <Download size={18} />
                             </button>
                             
                             {job.status !== 'done' && (

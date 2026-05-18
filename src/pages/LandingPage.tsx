@@ -1,8 +1,45 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Printer, CloudLightning, QrCode, ShieldCheck, Files, ChevronRight } from 'lucide-react'
+import { Printer, CloudLightning, QrCode, ShieldCheck, Files, ChevronRight, Search, Store } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 export function LandingPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [printers, setPrinters] = useState<any[]>([])
+  const [loadingPrinters, setLoadingPrinters] = useState(false)
+
+  useEffect(() => {
+    async function searchPrinters() {
+      if (!searchQuery.trim()) {
+        setPrinters([])
+        return
+      }
+      
+      setLoadingPrinters(true)
+      
+      // Mencari berdasarkan nama toko (location) atau nama printer (name)
+      const { data, error } = await supabase
+        .from('devices')
+        .select('id, name, location, public_key')
+        .eq('is_accepting_jobs', true)
+        .or(`location.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`)
+        .limit(5)
+        
+      if (!error && data) {
+        setPrinters(data)
+      }
+      
+      setLoadingPrinters(false)
+    }
+
+    const timer = setTimeout(() => {
+      searchPrinters()
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   const features = [
     {
       icon: <CloudLightning size={24} />,
@@ -72,12 +109,72 @@ export function LandingPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Link to="/login" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 group">
+            <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 group">
               Mulai Sekarang
               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>
         </div>
+
+        {/* Search Printer Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="max-w-2xl mx-auto mt-16 bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 p-6 border border-white relative z-20"
+        >
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-slate-800">Cari Toko Print Terdekat</h2>
+            <p className="text-sm text-slate-500 mt-1">Ingin ngeprint? Ketik nama toko untuk langsung mengirim file</p>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+              <Search size={20} />
+            </div>
+            <input
+              className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-12 pr-4 py-4 text-base outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+              placeholder="Contoh: Print Jaya, Fotocopy Berkah..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {searchQuery.trim() && (
+            <div className="mt-4 space-y-2">
+              {loadingPrinters ? (
+                <div className="text-center py-4 text-sm text-slate-500 animate-pulse">
+                  Mencari toko...
+                </div>
+              ) : printers.length > 0 ? (
+                printers.map(printer => (
+                  <Link 
+                    key={printer.id}
+                    to={`/send/d/${printer.public_key}`}
+                    className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
+                        <Store size={18} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{printer.location || 'Toko Print'}</h3>
+                        <p className="text-xs text-slate-500">{printer.name}</p>
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:shadow-sm transition-all">
+                      <ChevronRight size={18} />
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-6 text-sm text-slate-500 bg-slate-50 rounded-2xl border border-slate-100">
+                  Toko tidak ditemukan. Coba kata kunci lain.
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
 
         {/* Features Section */}
         <div className="mt-32">
