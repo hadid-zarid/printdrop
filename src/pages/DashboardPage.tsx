@@ -3,7 +3,33 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Power, Eye, Check, X, LogOut, Printer, RefreshCw, FileText, Copy, MapPin, Trash2 } from 'lucide-react'
+import { Power, Eye, Check, X, LogOut, Printer, RefreshCw, FileText, Copy, MapPin, Trash2, ShieldAlert } from 'lucide-react'
+
+function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContext) return
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime) // A5 note
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1)
+    
+    gain.gain.setValueAtTime(0, ctx.currentTime)
+    gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+    
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.5)
+  } catch (e) {
+    console.error('Audio play failed', e)
+  }
+}
 
 type Device = {
   id: string
@@ -96,7 +122,11 @@ export function DashboardPage() {
           table: 'print_jobs',
           filter: `device_id=eq.${device.id}`,
         },
-        () => {
+        (payload) => {
+          // Jika ada file baru masuk, bunyikan suara
+          if (payload.eventType === 'INSERT') {
+            playNotificationSound()
+          }
           // Hanya me-refresh jobs, tidak seluruh dashboard
           fetchJobs(device.id, limit)
         },
@@ -184,6 +214,44 @@ export function DashboardPage() {
 
     toast.success('File berhasil dihapus', { id: toastId })
     if (device) fetchJobs(device.id, limit)
+  }
+
+  async function clearAllJobs() {
+    if (!device) return
+    if (!confirm('AWAS! Anda akan menghapus SEMUA riwayat antrean dan file fisik hari ini. Lanjutkan?')) return
+
+    const toastId = toast.loading('Mengosongkan antrean...')
+
+    // 1. Dapatkan semua file path dari tabel
+    const { data: allJobs } = await supabase
+      .from('print_jobs')
+      .select('id, file_path')
+      .eq('device_id', device.id)
+
+    if (allJobs && allJobs.length > 0) {
+      const filePaths = allJobs.map((j) => j.file_path)
+      
+      // 2. Hapus fisik file di storage
+      const { error: storageError } = await supabase.storage.from('print-files').remove(filePaths)
+      if (storageError) {
+         toast.error('Gagal menghapus file storage: ' + storageError.message, { id: toastId })
+         return
+      }
+
+      // 3. Hapus data di tabel
+      const { error: dbError } = await supabase
+        .from('print_jobs')
+        .delete()
+        .eq('device_id', device.id)
+
+      if (dbError) {
+         toast.error('Gagal menghapus data antrean: ' + dbError.message, { id: toastId })
+         return
+      }
+    }
+
+    toast.success('Semua antrean berhasil dibersihkan!', { id: toastId })
+    fetchJobs(device.id, limit)
   }
 
   async function toggleDeviceStatus() {
@@ -347,13 +415,22 @@ export function DashboardPage() {
             transition={{ delay: 0.1 }}
             className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full min-h-[500px]"
           >
-            <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-slate-200 flex flex-wrap gap-4 items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-900 text-lg">Antrean File</h3>
                 <p className="text-xs text-slate-500 mt-1">Daftar file yang siap dicetak</p>
               </div>
-              <div className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">
-                {jobs.length} File
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={clearAllJobs}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"
+                  title="Kosongkan Semua"
+                >
+                  <ShieldAlert size={14} /> Kosongkan
+                </button>
+                <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold">
+                  {jobs.length} File
+                </div>
               </div>
             </div>
 
