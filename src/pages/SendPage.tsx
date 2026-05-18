@@ -254,6 +254,7 @@ export function SendPage() {
                     onChange={handleFileChange}
                     className="hidden"
                     multiple
+                    accept={device?.accepted_mime_types?.length ? device.accepted_mime_types.join(',') : ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*"}
                   />
                   
                   <div 
