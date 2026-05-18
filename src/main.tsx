@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import './index.css'
 
@@ -37,6 +37,10 @@ const router = createBrowserRouter([
     path: '/send/d/:publicKey',
     element: <SendPage />,
   },
+  {
+    path: '*',
+    element: <Navigate to="/" replace />,
+  }
 ])
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
