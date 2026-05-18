@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# 🖨️ PrintDrop
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PrintDrop adalah aplikasi manajemen antrean cetak dokumen berbasis cloud. Aplikasi ini memungkinkan pengguna (pelanggan) untuk mengirim file yang ingin dicetak melalui tautan publik (*Public Link*) atau pemindaian QR Code, sedangkan operator (pemilik printer) dapat menerima, mengelola, dan memproses antrean secara *real-time* melalui Dashboard.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Fitur Utama
 
-## React Compiler
+### 🧑‍💻 Untuk Pelanggan (Halaman Kirim File)
+- **Upload Mudah:** Antarmuka *drag-and-drop* modern untuk mengirim file dokumen (PDF, Image, Word, dll).
+- **Pengaturan Cetak:** Mendukung kustomisasi jumlah *copy*, ukuran kertas (A4, F4, Letter), dan mode warna (Hitam Putih / Berwarna).
+- **Keamanan PIN:** Dukungan untuk meminta PIN sebelum pelanggan dapat mengirim file ke printer tertentu (dikonfigurasi oleh operator).
+- **Catatan Tambahan:** Pengguna dapat meninggalkan pesan khusus untuk operator (misal: "Tolong jilid spiral").
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 👨‍💼 Untuk Operator (Dashboard Admin)
+- **Realtime Dashboard:** Antrean baru akan muncul secara instan tanpa perlu memuat ulang (*refresh*) halaman berkat sinkronisasi langsung dengan Supabase.
+- **Manajemen Status:** Ubah status file menjadi Selesai (*Done*) atau Gagal (*Failed*), dan hapus file permanen dari Storage.
+- **Kontrol Akses Printer:** Operator dapat menyalakan atau mematikan penerimaan file hanya dengan sekali klik (Toggle Status).
+- **QR Code Terintegrasi:** Terdapat QR Code yang ter-generate otomatis untuk dipajang di area fisik *printing/fotocopy*.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Teknologi yang Digunakan
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Aplikasi ini dibangun menggunakan *stack* modern untuk menjamin performa dan kualitas UI/UX:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Frontend Framework:** React 19 + TypeScript + Vite
+- **Styling:** Tailwind CSS v4 + Framer Motion (untuk animasi transisi)
+- **Ikonografi:** Lucide React
+- **Notifikasi (Toast):** Sonner
+- **Backend / Database:** Supabase (Database PostgreSQL, Auth, Storage, dan Realtime)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🚀 Cara Menjalankan Secara Lokal
+
+### 1. Kloning Repositori
+```bash
+git clone https://github.com/hadid-zarid/printdrop.git
+cd printdrop
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Instalasi Dependensi
+Pastikan Anda sudah menginstal Node.js di komputer Anda.
+```bash
+npm install
 ```
+
+### 3. Konfigurasi Environment (Supabase)
+Buat file bernama `.env` di folder utama (sejajar dengan `package.json`) dan isi dengan kredensial Supabase Anda:
+```env
+VITE_SUPABASE_URL=https://<PROJECT-ID>.supabase.co
+VITE_SUPABASE_ANON_KEY=<ANON-KEY-ANDA>
+```
+
+### 4. Menjalankan Development Server
+```bash
+npm run dev
+```
+Buka browser Anda dan akses `http://localhost:5173`.
+
+---
+
+## 🗄️ Konfigurasi Database (Supabase)
+
+Agar aplikasi dapat berjalan dengan lancar, Anda membutuhkan tabel berikut di database Supabase Anda:
+
+1. **`devices`**: Untuk menyimpan data printer, public key, status *is_accepting_jobs*, lokasi, dsb.
+2. **`print_jobs`**: Untuk menyimpan riwayat unggahan antrean cetak beserta tautan referensi file (*file_path*) yang ada di Storage bucket.
+
+*Bucket Storage*: Aplikasi ini menggunakan Supabase Storage dengan nama bucket `print-files` untuk menampung dokumen yang diunggah oleh pelanggan.
+
+---
+
+> Dibuat dengan antarmuka premium (Glassmorphism & Micro-animations) untuk memberikan pengalaman terbaik kepada pelanggan Anda.
