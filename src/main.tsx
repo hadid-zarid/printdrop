@@ -1,18 +1,20 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import './index.css'
 
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
 import { SendPage } from './pages/SendPage'
+import { LandingPage } from './pages/LandingPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/dashboard" replace />,
+    element: <LandingPage />,
   },
   {
     element: <ProtectedRoute />,
@@ -20,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: '/login',
         element: <LoginPage />,
+      },
+      {
+        path: '/register',
+        element: <RegisterPage />,
       },
       {
         path: '/dashboard',

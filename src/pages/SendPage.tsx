@@ -257,7 +257,7 @@ export function SendPage() {
                   />
                   
                   <div 
-                    onClick={(e) => {
+                    onClick={() => {
                       if (files.length === 0) fileInputRef.current?.click()
                     }}
                     className={`relative border-2 rounded-3xl p-6 text-center transition-all ${

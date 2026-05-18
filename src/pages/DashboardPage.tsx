@@ -49,6 +49,7 @@ type PrintJob = {
   copies: number
   paper_size: string
   color_mode: string
+  customer_note: string | null
   status: string
   created_at: string
 }
@@ -466,6 +467,16 @@ export function DashboardPage() {
                               <p className="text-xs text-slate-500 mt-0.5">
                                 {(job.file_size / 1024 / 1024).toFixed(2)} MB • {new Date(job.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                               </p>
+                              {job.customer_note && (
+                                <div className="mt-1.5">
+                                  <p 
+                                    className="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md inline-block max-w-[220px] truncate" 
+                                    title={job.customer_note}
+                                  >
+                                    📝 {job.customer_note}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>

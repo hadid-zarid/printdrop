@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { Loader2, Lock, Mail, Printer } from 'lucide-react'
 
 export function LoginPage() {
@@ -107,6 +108,13 @@ export function LoginPage() {
             )}
           </button>
         </form>
+
+        <p className="text-sm text-slate-500 mt-6 text-center">
+          Belum punya akun?{' '}
+          <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-700">
+            Daftar di sini
+          </Link>
+        </p>
       </motion.div>
     </div>
   )

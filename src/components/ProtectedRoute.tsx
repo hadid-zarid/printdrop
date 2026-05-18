@@ -34,13 +34,13 @@ export function ProtectedRoute() {
     )
   }
 
-  const isLoginPage = location.pathname === '/login'
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
 
-  if (session && isLoginPage) {
+  if (session && isAuthPage) {
     return <Navigate to="/dashboard" replace />
   }
 
-  if (!session && !isLoginPage) {
+  if (!session && !isAuthPage) {
     return <Navigate to="/login" replace />
   }
 
